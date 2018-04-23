@@ -26,13 +26,60 @@ class Blog(db.Model):
 class User(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(120), unique=True)
-    password = db.Column(db.String(120))
+    username = db.Column(db.String(25), unique=True)
+    password = db.Column(db.String(25))
     blogs = db.relationship('Blog', backref='owner')
 
     def __init__(self, username, password):
         self.username = username
         self.password = password
+
+
+
+@app.route('/login', methods=['POST', 'GET'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        user = User.query.filter_by(username=username).first()
+        if user and user.password == password:
+            session['user'] = username
+            flash("Logged in")
+            return redirect('/newpost')
+        else:
+            flash('User password incorrect, or user does not exist', 'error')
+
+    return render_template('login.html')
+
+
+@app.route('/signup', methods=['POST', 'GET'])
+def signup():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        verify = request.form['verify']
+
+        # TODO - validate user's data
+
+        existing_user = User.query.filter_by(username=username).first()
+        if not existing_user:
+            new_user = User(username, password)
+            db.session.add(new_user)
+            db.session.commit()
+            session['username'] = username
+            return redirect('/newpost')
+        else:
+            # TODO - user better response messaging
+            return "<h1>Duplicate user</h1>"
+
+    return render_template('signup.html')
+
+
+@app.before_request
+def require_login():
+    allowed_routes = ['login', 'signup']
+    if request.endpoint not in allowed_routes and 'user' not in session:
+        return redirect('/login')
 
 
 
@@ -65,7 +112,7 @@ def index():
     else:
         blog_id = int(blog_id)
         blog = Blog.query.get(blog_id)
-        return render_template('singlePost.html', title=blog.blog_title, 
+        return render_template('single.html', title=blog.blog_title, 
             body=blog.body)
     
 
@@ -78,6 +125,7 @@ def added_blog():
     if request.method == 'POST':
         blog_title = request.form['blog_title']
         body = request.form['body']
+        owner = User.query.filter_by(username=session['user']).first()
 
 
         body_error = ""
@@ -92,7 +140,7 @@ def added_blog():
                 body_error = body_error )
             
         else:    
-            new_blog = Blog(blog_title,body)
+            new_blog = Blog(blog_title,body,owner)
             db.session.add(new_blog)
             db.session.commit()
 

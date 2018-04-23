@@ -2,9 +2,17 @@
 <html>
     <head>
        <title>{{title}}</title>
+       <span class="btnPad"><a href='/'>Home</a></span>
+       <!--TODO:ALL POST REDIRECT-->
+       <span class="btnPad"><a href='/newpost'>All Posts</a></span>
+       
+       <span class="btnPad"><a href='/newpost'>New Post</a></span>
 
-       <span class="btnPad"><a href='/newpost'>Add a Blog Entry</a></span>
-       <span class="btnPad"><a href='/'>  Main Blog Page</a></span>
+       <div align= "right">
+       <span class="btnPad"><a href='/logout'> Log out</a></span>
+       <span class="btnPad"><a href='/login'> Log in</a></span>
+       </div>
+    
     <style>   
     .error{
         color : red
@@ -13,8 +21,18 @@
         margin-left:15px; margin-right:15px
         }
     </style>
+
     </head>
 <body>
+
+
+    {% with messages = get_flashed_messages(with_categories=True) %}
+        <ul>
+        {% for category,message in messages %}
+            <li class="{{category}}">{{message}}</li>
+        {% endfor %}
+        </ul>
+    {% endwith %}
 
     {% block content %}
     {% endblock %}
