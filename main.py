@@ -75,13 +75,17 @@ def signup():
     return render_template('signup.html')
 
 
+
 @app.before_request
 def require_login():
-    allowed_routes = ['login', 'signup']
+    allowed_routes = ['home','login', 'signup']
     if request.endpoint not in allowed_routes and 'user' not in session:
         return redirect('/login')
 
-
+@app.route('/logout')
+def logout():
+    del session['user']
+    return redirect('/')
 
 
 
@@ -95,12 +99,18 @@ def require_login():
 
 ###################
 @app.route('/')
-def home():
+def index():
+
+
     return redirect('/blog')     
 
    
 @app.route('/blog', methods=['GET'])
-def index():
+def home():
+    ###blogz add
+    if 'user' not in session:
+            users =User.query.all()
+            return render_template("index.html",title="All Users",users = users)
 
     blog_id = request.args.get('blog_id', '')
 
@@ -125,6 +135,7 @@ def added_blog():
     if request.method == 'POST':
         blog_title = request.form['blog_title']
         body = request.form['body']
+       ##blogz add
         owner = User.query.filter_by(username=session['user']).first()
 
 
